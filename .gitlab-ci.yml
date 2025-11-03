@@ -19,7 +19,9 @@ lint_python:
 
 lint_dockerfile:
   stage: lint
-  image: hadolint/hadolint:latest
+  image:
+    name: hadolint/hadolint:latest
+    entrypoint: [""] 
   script:
     - hadolint Dockerfile
   only:
