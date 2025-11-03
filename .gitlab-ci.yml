@@ -19,11 +19,13 @@ lint_python:
 
 lint_dockerfile:
   stage: lint
-  image:
-    name: hadolint/hadolint:latest
-    entrypoint: [""] 
+  image: docker:latest
+  services:
+    - docker:dind
+  variables:
+    DOCKER_TLS_CERTDIR: ""
   script:
-    - hadolint Dockerfile
+    - docker run --rm -i hadolint/hadolint < Dockerfile
   only:
     - main
 
@@ -60,3 +62,4 @@ push_image:
     - docker push $DOCKERHUB_USERNAME/$IMAGE_NAME:$IMAGE_TAG
   only:
     - main
+
