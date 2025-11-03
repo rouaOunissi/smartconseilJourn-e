@@ -47,6 +47,7 @@ scan_image:
     name: aquasec/trivy:latest
     entrypoint: [""]
   script:
+    - docker build -t $IMAGE_NAME:$IMAGE_TAG .
     - trivy image --exit-code 0 --severity HIGH,CRITICAL $IMAGE_NAME:$IMAGE_TAG
   only:
     - main
