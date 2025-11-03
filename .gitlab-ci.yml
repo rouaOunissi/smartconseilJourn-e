@@ -1,0 +1,60 @@
+stages:
+  - lint
+  - build
+  - scan
+  - push
+
+variables:
+  IMAGE_NAME: "djangoapp"
+  IMAGE_TAG: "latest"
+
+lint_python:
+  stage: lint
+  image: python:3.11
+  script:
+    - pip install flake8
+    - flake8 .
+  only:
+    - main
+
+lint_dockerfile:
+  stage: lint
+  image: hadolint/hadolint:latest
+  script:
+    - hadolint Dockerfile
+  only:
+    - main
+
+build_image:
+  stage: build
+  image: docker:latest
+  services:
+    - docker:dind
+  variables:
+    DOCKER_TLS_CERTDIR: ""
+  script:
+    - docker build -t $IMAGE_NAME:$IMAGE_TAG .
+  only:
+    - main
+
+scan_image:
+  stage: scan
+  image: aquasec/trivy:latest
+  script:
+    - trivy image --exit-code 0 --severity HIGH,CRITICAL $IMAGE_NAME:$IMAGE_TAG
+  only:
+    - main
+
+push_image:
+  stage: push
+  image: docker:latest
+  services:
+    - docker:dind
+  variables:
+    DOCKER_TLS_CERTDIR: ""
+  script:
+    - echo "$DOCKERHUB_PASSWORD" | docker login -u "$DOCKERHUB_USERNAME" --password-stdin
+    - docker build -t $DOCKERHUB_USERNAME/$IMAGE_NAME:$IMAGE_TAG .
+    - docker push $DOCKERHUB_USERNAME/$IMAGE_NAME:$IMAGE_TAG
+  only:
+    - main
